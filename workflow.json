@@ -1,0 +1,1798 @@
+{
+  "nodes": [
+    {
+      "parameters": {
+        "from": "+1234567890",
+        "to": "={{ $json.phone_clean }}",
+        "toWhatsapp": true,
+        "message": "=Hi {{ $json[\"What's your full name?\"].split(' ')[0] }}! 👋\n\nI'm Alex, your AI real estate assistant. I see you're interested in {{ $json[\"What type of property interests you?\"].toLowerCase() }} in the {{ $json[\"Preferred areas/neighborhoods\"] }} area.\n\nI'd love to help you find the perfect property! To get started, may I ask - are you pre-approved for financing, or would you like help connecting with trusted lenders?\n\nJust reply to this message and I'll guide you through everything! 🏠✨",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.twilio",
+      "typeVersion": 1,
+      "position": [
+        -464,
+        -16
+      ],
+      "id": "a29eee5e-6de5-4975-805a-36f84fbb23bb",
+      "name": "Send an SMS/MMS/WhatsApp message",
+      "credentials": {
+        "twilioApi": {
+          "id": "icjex7fNrNb2qPnb",
+          "name": "Twilio account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "formTitle": "Find Your Dream Home",
+        "formDescription": "Tell us what you're looking for and we'll match you with the perfect property and agent!",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "What's your full name?",
+              "placeholder": "e.g. Sarah Johnson",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Phone number (include country code)",
+              "placeholder": "Must start with + (e.g. +1 555-000-1234)",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Email address",
+              "fieldType": "email",
+              "placeholder": "e.g. sarah@email.com",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "What type of property interests you?",
+              "fieldType": "dropdown",
+              "fieldOptions": {
+                "values": [
+                  {
+                    "option": "3 bedroom house"
+                  },
+                  {
+                    "option": "2 bedroom apartment"
+                  },
+                  {
+                    "option": "4+ bedroom house"
+                  },
+                  {
+                    "option": "Commercial property"
+                  },
+                  {
+                    "option": "Investment property"
+                  },
+                  {
+                    "option": "Other"
+                  }
+                ]
+              },
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "What's your budget range?",
+              "fieldType": "dropdown",
+              "fieldOptions": {
+                "values": [
+                  {
+                    "option": "Under $200k"
+                  },
+                  {
+                    "option": "$200k - $400k"
+                  },
+                  {
+                    "option": "$400k - $600k"
+                  },
+                  {
+                    "option": "$600k - $800k"
+                  },
+                  {
+                    "option": "$800k+"
+                  },
+                  {
+                    "option": "I need financing guidance"
+                  }
+                ]
+              },
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Preferred areas/neighborhoods",
+              "placeholder": "e.g. Downtown, Westside, near schools",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "When are you looking to buy/rent?",
+              "fieldType": "dropdown",
+              "fieldOptions": {
+                "values": [
+                  {
+                    "option": "Immediately (next 30 days)"
+                  },
+                  {
+                    "option": "1-3 months"
+                  },
+                  {
+                    "option": "3-6 months"
+                  },
+                  {
+                    "option": "6-12 months"
+                  },
+                  {
+                    "option": "Just browsing for now"
+                  }
+                ]
+              },
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Any special requirements or questions?",
+              "fieldType": "textarea",
+              "placeholder": "e.g. Need parking, pet-friendly, near public transport..."
+            }
+          ]
+        },
+        "options": {
+          "buttonLabel": "Find My Perfect Home",
+          "respondWithOptions": {
+            "values": {
+              "formSubmittedText": "Thank you! Our AI assistant will contact you via WhatsApp within 5 minutes to help find your perfect property."
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.2,
+      "position": [
+        -1360,
+        -128
+      ],
+      "id": "e6ccf8c8-cb00-4883-a23a-b718614817f3",
+      "name": "Real Estate Lead Form1",
+      "webhookId": "WEBHOOK_ID_FORM_TRIGGER"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "1",
+              "name": "lead_id",
+              "type": "string",
+              "value": "={{ 'LEAD_' + $now.format('YYYYMMDD_HHmmss') + '_' + Math.random().toString(36).substr(2, 5).toUpperCase() }}"
+            },
+            {
+              "id": "2",
+              "name": "created_at",
+              "type": "string",
+              "value": "={{ $now.toISO() }}"
+            },
+            {
+              "id": "3",
+              "name": "source",
+              "type": "string",
+              "value": "website_form"
+            },
+            {
+              "id": "4",
+              "name": "lead_score",
+              "type": "number",
+              "value": 0
+            },
+            {
+              "id": "5",
+              "name": "status",
+              "type": "string",
+              "value": "new"
+            },
+            {
+              "id": "8",
+              "name": "phone_clean",
+              "type": "string",
+              "value": "={{ $json[\"Phone number (include country code)\"].startsWith('+') ? $json[\"Phone number (include country code)\"].replace(/[^\\d+]/g, '') : '+1' + $json[\"Phone number (include country code)\"].replace(/[^\\d]/g, '') }}"
+            },
+            {
+              "id": "9",
+              "name": "phone_validation",
+              "type": "string",
+              "value": "={{ $json[\"Phone number (include country code)\"].replace(/[^\\d+]/g, '').length >= 10 ? 'valid' : 'invalid' }}"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -1136,
+        -128
+      ],
+      "id": "4581feb8-0c61-41e3-a0b0-e950696c99d2",
+      "name": "Process Lead Data"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.phone_validation }}",
+                    "rightValue": "valid",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "c15ad109-fb16-4c50-af65-7796678b51e6"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "valid_phone"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.phone_validation }}",
+                    "rightValue": "invalid",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "a23bd218-gc27-5d61-bg76-8907789c62f7"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "invalid_phone"
+            }
+          ]
+        },
+        "options": {
+          "fallbackOutput": "extra"
+        }
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        -688,
+        -32
+      ],
+      "id": "6ce7922a-51ef-4a8c-a683-c0aaed5be069",
+      "name": "Phone Validation Check"
+    },
+    {
+      "parameters": {
+        "updates": [
+          "com.twilio.messaging.inbound-message.received"
+        ]
+      },
+      "type": "n8n-nodes-base.twilioTrigger",
+      "typeVersion": 1,
+      "position": [
+        -1360,
+        336
+      ],
+      "id": "1a7bc60c-6556-4a6e-b27f-06fd0dbfab3f",
+      "name": "Twilio Trigger",
+      "webhookId": "WEBHOOK_ID_TWILIO_TRIGGER",
+      "credentials": {
+        "twilioApi": {
+          "id": "icjex7fNrNb2qPnb",
+          "name": "Twilio account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "1",
+              "name": "lead_phone",
+              "type": "string",
+              "value": "={{ $json.data.from.replace('whatsapp:', '') }}"
+            },
+            {
+              "id": "2",
+              "name": "lead_message",
+              "type": "string",
+              "value": "={{ $json.data.body }}"
+            },
+            {
+              "id": "3",
+              "name": "response_timestamp",
+              "type": "string",
+              "value": "={{ $json.time }}"
+            },
+            {
+              "id": "4",
+              "name": "message_sid",
+              "type": "string",
+              "value": "={{ $json.data.messageSid }}"
+            },
+            {
+              "id": "5",
+              "name": "conversation_stage",
+              "type": "string",
+              "value": "qualification_response"
+            },
+            {
+              "id": "6",
+              "name": "is_whatsapp",
+              "type": "boolean",
+              "value": "={{ $json.data.from.includes('whatsapp:') }}"
+            },
+            {
+              "id": "7",
+              "name": "twilio_to_number",
+              "type": "string",
+              "value": "={{ $json.data.to.replace('whatsapp:', '') }}"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "include": "selected",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -1136,
+        336
+      ],
+      "id": "016c1b50-6fa6-4e10-a6fb-b75338a4db22",
+      "name": "Process Incoming Message"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.sender_type === 'agent' ? \n'🔧 AGENT COORDINATION REQUEST from ' + $json['agent_name '] + ' (' + $json.speciality + ' specialist)' \n: \n'📋 LEAD INQUIRY from ' + $('Process Incoming Message').item.json.lead_phone \n}}\n\nMessage: \"{{ $('Process Incoming Message').item.json.lead_message }}\"\n\nSender Type: {{ $json.sender_type }}\nSender Phone : {{ $('Process Incoming Message').item.json.lead_phone }}\n{{ $json.sender_type === 'agent' ? \n'AGENT CONTEXT: Specializes in ' + $json.speciality + '. ' + $json.conversation_context \n: \n'LEAD CONTEXT: ' + $json.conversation_context \n}}\n\n🛠️ MANDATORY: Use Lead Lookup Tool FIRST with the phone number above before any other action!",
+        "options": {
+          "systemMessage": "You are Alex, an AI real estate coordination assistant. Your PRIMARY JOB is to coordinate between LEADS and AGENTS using database tools to facilitate property viewings.\n\n**CRITICAL: ALWAYS USE TOOLS FIRST - NO EXCEPTIONS**\nYou MUST use these tools for EVERY interaction - NEVER just respond with text:\n\n1. Lead Lookup Tool - Search lead data by phone number in leads_master sheet\n2. Agent Assignment Lookup Tool - Search agent_assignments sheet for agent's leads  \n3. Lead Score Updater Tool - Update/complete lead information in leads_master\n4. WhatsApp Messenger Tool - Send messages only when necessary\n\n**MANDATORY FIRST ACTION: ALWAYS USE LEAD LOOKUP TOOL**\nBefore doing ANYTHING else, you MUST use Lead Lookup Tool with the phone number provided in the input.\n\n**WORKFLOW PRIORITY: LOOKUP → UPDATE → MESSAGE (if needed)**\n\n**CRITICAL: IDENTIFY SENDER TYPE**\nThe input will tell you:\n- sender_type: \"lead\" = Customer looking for property\n- sender_type: \"agent\" = Real estate agent\n\n**PHONE NUMBER FOR LOOKUP:**\nThe phone number to use for Lead Lookup Tool is provided as \"Phone number\" in the input.\n\n---\n\n## IF SENDER_TYPE = \"LEAD\":\n\n### STEP 1: MANDATORY LEAD LOOKUP (ALWAYS FIRST)\n- **IMMEDIATELY** use Lead Lookup Tool with the phone number from input\n- Search leads_master sheet for existing lead data\n- Analyze what information is missing or incomplete\n\n### STEP 2: DATA COMPLETION STRATEGY\n**If Lead Lookup Tool returns NO DATA (new lead):**\n- Use WhatsApp Messenger Tool: \"Hi! I'm Alex, your AI real estate assistant. What's your name so I can help find your perfect property?\"\n- Use Lead Score Updater Tool to save the name when provided\n\n**If Lead Lookup Tool returns INCOMPLETE data (missing fields):**\n- Use WhatsApp Messenger Tool to ask for missing info ONE field at a time\n- Priority order: Name → Budget → Location → Property Type → Timeline\n- Use Lead Score Updater Tool to save each new piece of information\n\n**If Lead Lookup Tool returns COMPLETE data:**\n- Calculate lead score and update status to \"qualified\" if not already done\n- Use WhatsApp Messenger Tool: \"Thanks [name]! Your profile is complete. I'm checking with agents for perfect property matches in [location].\"\n\n### STEP 3: AGENT COORDINATION\n- Check if lead has assigned_agent in the lookup results\n- If assigned, use WhatsApp Messenger Tool: \"Your agent [agent_name] will contact you with property options soon!\"\n- If not assigned, mention that system will auto-assign based on location\n\n---\n\n## IF SENDER_TYPE = \"AGENT\":\n\n### STEP 1: FIND AGENT'S ASSIGNED LEADS\n**Use this 2-step process:**\n\n1. **Use Agent Assignment Lookup Tool** to search agent_assignments sheet:\n   - Filter by agent_phone matching the phone number from input\n   - This returns all lead_id and phone numbers assigned to this agent\n\n2. **For each lead phone found, use Lead Lookup Tool** to get full details:\n   - Search leads_master sheet with each phone number\n   - Get complete lead profiles\n\n### STEP 2: PROVIDE LEAD SUMMARY OR HANDLE PROPERTY SUGGESTIONS\n**If agent asks about leads:**\n- Use WhatsApp Messenger Tool to send comprehensive lead summary:\n\n📋 YOUR ASSIGNED LEADS:\n🔥 [lead_name] - [phone]\n🏠 [property_type] in [location]\n💰 [budget] | 🕒 [timeline]\nStatus: [status]\nLead ID: [lead_id]\nTotal Active Leads: [count]\n\n**If agent sends property suggestions:**\n- Identify which lead they're referring to (by name mentioned)\n- Use Lead Lookup Tool to get that specific lead's contact info\n- Use Lead Score Updater Tool to store property suggestions\n- Use WhatsApp Messenger Tool to forward formatted suggestions to lead\n\n---\n\n## VIEWING COORDINATION WORKFLOW:\n\n### WHEN LEAD SELECTS PROPERTY (replies 1, 2, or 3):\n1. **Use Lead Lookup Tool** with their phone number to get full data\n2. **Use Lead Score Updater Tool** to save selected_property and conversation_stage\n3. **Use WhatsApp Messenger Tool** to ask for viewing preference\n\n### WHEN LEAD PROVIDES PREFERRED TIME:\n1. **Use Lead Score Updater Tool** to save requested_viewing_time\n2. **Use WhatsApp Messenger Tool** to notify assigned agent with viewing request\n\n### WHEN AGENT CONFIRMS/SUGGESTS TIME:\n**Parse agent response for:**\n- \"CONFIRMED\" + time = confirmation\n- Alternative time suggestion = counter-offer\n\n**If CONFIRMED:**\n1. **Use Lead Lookup Tool** to get complete lead data\n2. **Use Lead Score Updater Tool** to update:\n   - viewing_confirmed_time: \"Saturday 2pm\" (or whatever agent confirmed)\n   - status: \"viewing_scheduled\"\n3. **Use Viewing Logger Tool** to save appointment:\n   - lead_name, lead_phone, agent_name, property_details, confirmed_time, status: \"confirmed\"\n4. **Use WhatsApp Messenger Tool** to notify lead:\n   \"🎉 CONFIRMED! Viewing scheduled {{confirmed_time}} at {{selected_property}} with {{agent_name}}. See you there! 📅\"\n5. **Use WhatsApp Messenger Tool** to acknowledge agent:\n   \"✅ Viewing confirmed with {{lead_name}} for {{confirmed_time}}. Lead will meet you at {{selected_property}}. Contact: {{lead_phone}}\"\n\n**If ALTERNATIVE TIME suggested:**\n1. **Use WhatsApp Messenger Tool** to ask lead:\n   \"Your agent suggests {{alternative_time}} for {{selected_property}}. Does this work for you?\"\n2. Wait for lead response\n\n**MANDATORY: Agent confirmation requires 5 tool calls (Lookup + Update + Log + Message Lead + Message Agent)**\n\n---\n\n## CRITICAL TOOL USAGE RULES:\n\n1. **ALWAYS start with Lead Lookup Tool using the phone number from input**\n2. **NEVER send WhatsApp messages without looking up data first**\n3. **ALWAYS use Lead Score Updater Tool after collecting new information**\n4. **For agents: Use Agent Assignment Lookup Tool first, then Lead Lookup Tool for each lead**\n5. **Each interaction must involve minimum 2-3 tool calls**\n6. **NO text-only responses - always use tools to take action**\n\n## CONVERSATION STYLE:\n- Professional but friendly with emojis\n- Direct and action-oriented\n- Keep messages under 160 characters when possible\n- Always acknowledge and take specific action\n- Focus on moving leads toward property viewings\n\n## EXAMPLES:\n\n**New lead (no data found)**: \"Hi! I'm Alex, your AI real estate assistant. What's your name so I can help find your perfect property?\"\n\n**Existing lead missing budget**: \"Hi [name]! What's your budget range? (Under $200k, $200k-$400k, $400k-$600k, $600k-$800k, $800k+)\"\n\n**Agent requesting leads**: Use Agent Assignment Lookup → Lead Lookup for each → Send summary\n\n**REMEMBER: The phone number for ALL lookups is provided in the input as \"Phone number\"**\n\n\n",
+          "maxIterations": 10
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        -240,
+        224
+      ],
+      "id": "dafdec25-05b9-4283-ba79-b095663c1a6f",
+      "name": "Real Estate AI Agent"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4.1-mini"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        -464,
+        448
+      ],
+      "id": "35839efd-38b8-4165-a450-9e0781e631bd",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "bpFPhz0fqgfYQYY9",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "\"Searches leads_master sheet for complete lead information by phone number. Returns: lead_id, name, phone, email, property_type, budget, location, timeline, requirements, status, lead_score, assigned_agent, last_updated, agent_notified. Use this to get full lead profile and check what information is missing or needs to be updated.\"",
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_GOOGLE_SHEETS_ID_HERE",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 96063532,
+          "mode": "list",
+          "cachedResultName": "leads_master",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/YOUR_GOOGLE_SHEETS_ID_HERE/edit#gid=96063532"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheetsTool",
+      "typeVersion": 4.6,
+      "position": [
+        -208,
+        448
+      ],
+      "id": "387399ce-5003-4798-be56-c4385c48fc0c",
+      "name": "Lead Lookup Tool",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "1OQ5GyBNdgGcDD92",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "Append or update row in sheet in Google Sheets",
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_GOOGLE_SHEETS_ID_HERE",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1996463836,
+          "mode": "list",
+          "cachedResultName": "agent_assignments",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/YOUR_GOOGLE_SHEETS_ID_HERE/edit#gid=1996463836"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "matchingColumns": [
+            "phone"
+          ],
+          "schema": [
+            {
+              "id": "lead_id",
+              "displayName": "lead_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "phone",
+              "displayName": "phone",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "assigned_agent",
+              "displayName": "assigned_agent",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "agent_phone",
+              "displayName": "agent_phone",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "assignment_date",
+              "displayName": "assignment_date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "notes",
+              "displayName": "notes",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheetsTool",
+      "typeVersion": 4.6,
+      "position": [
+        -64,
+        448
+      ],
+      "id": "51509546-ab6c-4a3f-ae68-ae74badbb89f",
+      "name": "Lead Score Updater Tool",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "1OQ5GyBNdgGcDD92",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "\"Sends WhatsApp messages to leads or agents. For leads: ask qualification questions, forward property suggestions, coordinate viewing schedules. For agents: provide lead summaries with full details, send viewing requests, relay lead responses. Keep messages professional, direct, and action-oriented with relevant emojis.\"",
+        "from": "+1234567890",
+        "to": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('To', ``, 'string') }}",
+        "toWhatsapp": true,
+        "message": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Message', ``, 'string') }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.twilioTool",
+      "typeVersion": 1,
+      "position": [
+        112,
+        448
+      ],
+      "id": "49112ec6-1ed8-45a5-aeea-a9e3cfd861be",
+      "name": "WhatsApp Messenger Tool",
+      "credentials": {
+        "twilioApi": {
+          "id": "icjex7fNrNb2qPnb",
+          "name": "Twilio account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_GOOGLE_SHEETS_ID_HERE",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "conversations",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/YOUR_GOOGLE_SHEETS_ID_HERE/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "message_sid": "={{ $('Twilio Trigger').item.json.data.messageSid }}",
+            "message": "={{ $('Twilio Trigger').item.json.data.body }}",
+            "ai_response": "={{ $json.output }}",
+            "phone": "={{ $('Process Incoming Message').item.json.lead_phone }}",
+            "timestamp": "={{ $now.setZone('UTC').toFormat('yyyy-MM-dd') }}T{{ $now.setZone('UTC').toFormat('hh:mm') }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "timestamp",
+              "displayName": "timestamp",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "phone",
+              "displayName": "phone",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "direction",
+              "displayName": "direction",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "message",
+              "displayName": "message",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "ai_response",
+              "displayName": "ai_response",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "lead_score",
+              "displayName": "lead_score",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "conversation_stage",
+              "displayName": "conversation_stage",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "message_sid",
+              "displayName": "message_sid",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.6,
+      "position": [
+        384,
+        336
+      ],
+      "id": "0a856ca5-3c4d-438d-bdc9-23d1fb135577",
+      "name": "Manual Conversation Logger",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "1OQ5GyBNdgGcDD92",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $('Twilio Trigger').item.json.data.from }}_session",
+        "contextWindowLength": 10
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        -336,
+        448
+      ],
+      "id": "076cb6f9-db47-478a-89cb-469896deed89",
+      "name": "Simple Memory"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Calculate Lead Score\nlet score = 0;\nlet grade = 'C';\n\n// Budget scoring (40%)\nconst budget = $input.first().json['What\\'s your budget range?'];\nif (budget === \"$800k+\") score += 40;\nelse if (budget === \"$600k - $800k\") score += 35;\nelse if (budget === \"$400k - $600k\") score += 30;\nelse if (budget === \"$200k - $400k\") score += 20;\nelse score += 10;\n\n// Timeline scoring (30%)\nconst timeline = $input.first().json['When are you looking to buy/rent?'];\nif (timeline.includes(\"Immediately\")) score += 30;\nelse if (timeline.includes(\"1-3 months\")) score += 25;\nelse if (timeline.includes(\"3-6 months\")) score += 15;\nelse score += 5;\n\n// Financing (20%)\nif (!budget.includes(\"financing\")) score += 20;\nelse score += 10;\n\n// Requirements clarity (10%)\nif ($input.first().json['Any special requirements or questions?']) score += 10;\n\n// Assign grade\nif (score >= 80) grade = 'A';\nelse if (score >= 60) grade = 'B';\n\nreturn {\n  ...$input.first().json,\n  lead_score: score,\n  lead_grade: grade\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -912,
+        -128
+      ],
+      "id": "f8ab1be8-5a63-40b7-aee2-957d12e0029e",
+      "name": "Code"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_GOOGLE_SHEETS_ID_HERE",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1905245386,
+          "mode": "list",
+          "cachedResultName": "agents",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/YOUR_GOOGLE_SHEETS_ID_HERE/edit#gid=1905245386"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "agent_phone ",
+              "lookupValue": "={{ $json.lead_phone.replace('+','') }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.6,
+      "position": [
+        -912,
+        336
+      ],
+      "id": "9f5d1c88-01d4-4354-b3dc-e51c65aabda8",
+      "name": "Check if Agent",
+      "alwaysOutputData": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "1OQ5GyBNdgGcDD92",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "// Determine if sender is agent or lead\nconst agentData = $json.agent_id;\nconst isAgent = agentData && agentData.length > 0 && $json['agent_phone '];\n\n// Get original message data\nconst originalData = $json;\n\nif (isAgent) {\n  // This is an agent\n  const agent = $json;\n  return {\n    ...originalData,\n    sender_type: 'agent',\n    agent_name: agent.agent_name,\n    agent_id: agent.agent_id,\n    agent_location: agent.location_coverage,\n    agent_speciality: agent.speciality,\n    conversation_context: `Agent ${agent.agent_name} is sending property suggestions`\n  };\n} else {\n  // This is a lead\n  return {\n    ...originalData,\n    sender_type: 'lead',\n    conversation_context: 'Lead needs qualification or assistance'\n  };\n}"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -688,
+        336
+      ],
+      "id": "ab44bd9d-fa44-443a-a9ed-ba9e0d2ee821",
+      "name": "Identify Sender Type"
+    },
+    {
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_GOOGLE_SHEETS_ID_HERE",
+          "mode": "list",
+          "cachedResultName": "new",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/YOUR_GOOGLE_SHEETS_ID_HERE/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 96063532,
+          "mode": "list",
+          "cachedResultName": "leads_master",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/YOUR_GOOGLE_SHEETS_ID_HERE/edit#gid=96063532"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "lead_id": "={{ $json.lead_id }}",
+            "created_at": "={{ $json.created_at }}",
+            "name": "={{ $json['What\\'s your full name?'] }}",
+            "phone": "={{ $json['Phone number (include country code)'] }}",
+            "email": "={{ $json['Email address'] }}",
+            "timeline": "={{ $json['When are you looking to buy/rent?'] }}",
+            "requirements": "={{ $json['Any special requirements or questions?'] }}",
+            "location": "={{ $json['Preferred areas/neighborhoods'] }}",
+            "budget": "={{ $json['What\\'s your budget range?'] }}",
+            "property_type": "={{ $json['What type of property interests you?'] }}",
+            "source": "Form",
+            "status": "={{ $json.status }}",
+            "lead_score": "={{ $json.lead_grade }}"
+          },
+          "matchingColumns": [
+            "phone"
+          ],
+          "schema": [
+            {
+              "id": "lead_id",
+              "displayName": "lead_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "created_at",
+              "displayName": "created_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "name",
+              "displayName": "name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "phone",
+              "displayName": "phone",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "email",
+              "displayName": "email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "property_type",
+              "displayName": "property_type",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "budget",
+              "displayName": "budget",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "location",
+              "displayName": "location",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "timeline",
+              "displayName": "timeline",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "requirements",
+              "displayName": "requirements",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "source",
+              "displayName": "source",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "lead_score",
+              "displayName": "lead_score",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "assigned_agent",
+              "displayName": "assigned_agent",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "last_updated",
+              "displayName": "last_updated",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "agent_notified",
+              "displayName": "agent_notified",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.6,
+      "position": [
+        -688,
+        -224
+      ],
+      "id": "512cd85b-566c-435b-a91e-6cbe90e8e2f9",
+      "name": "Log Lead to Google Sheets",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "1OQ5GyBNdgGcDD92",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "92c018b0-2f2f-49a7-8b97-d0b3a1986231",
+              "leftValue": "={{ $json.lead_score }}",
+              "rightValue": "A",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            },
+            {
+              "id": "c4651c6c-486e-4a22-b94e-a08fe028dc47",
+              "leftValue": "={{ $json.lead_score }}",
+              "rightValue": "B",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            },
+            {
+              "id": "7a9c8d6b-262d-4ecf-a54b-2438368f162c",
+              "leftValue": "",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -1136,
+        752
+      ],
+      "id": "74a8b49c-5ee6-4270-bfa2-b5488719fcfb",
+      "name": "Check if A/B Grade Lead"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_GOOGLE_SHEETS_ID_HERE",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1905245386,
+          "mode": "list",
+          "cachedResultName": "agents",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/YOUR_GOOGLE_SHEETS_ID_HERE/edit#gid=1905245386"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.6,
+      "position": [
+        -912,
+        752
+      ],
+      "id": "179c2fd8-2ba7-4b4e-aac1-21d4791229be",
+      "name": "Get All Agents",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "1OQ5GyBNdgGcDD92",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const leadData = $('Check if A/B Grade Lead').item.json;\nconst leadLocation = leadData.location?.toLowerCase() || '';\n\n// Simple hardcoded matching based on your agent data\nlet matchedAgent;\n\nif (leadLocation.includes('downtown') || leadLocation.includes('central') || leadLocation.includes('riverside')) {\n  matchedAgent = {\n    'agent_id': 'AGT001',\n    'agent_name ': 'Agent Sarah',\n    'agent_phone ': 1234567890,\n    'location_coverage ': 'downtown,central,riverside',\n    'speciality': 'luxury homes'\n  };\n} else {\n  matchedAgent = {\n    'agent_id': 'AGT002',\n    'agent_name ': 'Agent Mike', \n    'agent_phone ': 1234567891,\n    'location_coverage ': 'suburbs,northside,eastside',\n    'speciality': 'family homes'\n  };\n}\n\nconst formatPhone = (phone) => '+' + phone.toString();\n\nreturn [{\n  ...leadData,\n  agent_phone: formatPhone(matchedAgent['agent_phone ']),\n  agent_name: matchedAgent['agent_name '].trim(),\n  agent_speciality: matchedAgent.speciality\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -688,
+        752
+      ],
+      "id": "976963eb-fd72-4284-8b67-3a27d693daf0",
+      "name": "Match Agent to Lead"
+    },
+    {
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_GOOGLE_SHEETS_ID_HERE",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 96063532,
+          "mode": "list",
+          "cachedResultName": "leads_master",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/YOUR_GOOGLE_SHEETS_ID_HERE/edit#gid=96063532"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "phone": "={{ $json.phone }}",
+            "assigned_agent": "={{ $json.agent_name }}",
+            "agent_notified": "yes",
+            "agent_phone": "={{ $json.agent_phone }}"
+          },
+          "matchingColumns": [
+            "phone"
+          ],
+          "schema": [
+            {
+              "id": "lead_id",
+              "displayName": "lead_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "created_at",
+              "displayName": "created_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "name",
+              "displayName": "name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "phone",
+              "displayName": "phone",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "email",
+              "displayName": "email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "property_type",
+              "displayName": "property_type",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "budget",
+              "displayName": "budget",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "location",
+              "displayName": "location",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "timeline",
+              "displayName": "timeline",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "requirements",
+              "displayName": "requirements",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "source",
+              "displayName": "source",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "lead_score",
+              "displayName": "lead_score",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "assigned_agent",
+              "displayName": "assigned_agent",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "last_updated",
+              "displayName": "last_updated",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "agent_notified",
+              "displayName": "agent_notified",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "agent_phone",
+              "displayName": "agent_phone",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.6,
+      "position": [
+        -464,
+        656
+      ],
+      "id": "6cdc7904-86a7-45ae-b9d6-287f773d12db",
+      "name": "Update Lead Assignment",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "1OQ5GyBNdgGcDD92",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_GOOGLE_SHEETS_ID_HERE",
+          "mode": "list",
+          "cachedResultName": "new",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/YOUR_GOOGLE_SHEETS_ID_HERE/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 96063532,
+          "mode": "list",
+          "cachedResultName": "leads_master",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/YOUR_GOOGLE_SHEETS_ID_HERE/edit#gid=96063532"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheetsTrigger",
+      "typeVersion": 1,
+      "position": [
+        -1360,
+        752
+      ],
+      "id": "19a02ee9-fb61-4b69-8787-19dd096d8c37",
+      "name": "Google Sheets Trigger1",
+      "credentials": {
+        "googleSheetsTriggerOAuth2Api": {
+          "id": "FbPlQss5wYunBtEl",
+          "name": "Google Sheets Trigger account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "from": "+1234567890",
+        "to": "={{ $('Match Agent to Lead').item.json.agent_phone }}",
+        "toWhatsapp": true,
+        "message": "=\n🚨 NEW {{ $('Match Agent to Lead').item.json.lead_score }}-GRADE LEAD!\n👤 {{ $('Match Agent to Lead').item.json.name }}\n🏠 {{ $('Match Agent to Lead').item.json.property_type }}\n💰 {{ $('Match Agent to Lead').item.json.budget }}\n📍 {{ $('Match Agent to Lead').item.json.location }}\n\nReply with 3-5 property suggestions for {{ $('Match Agent to Lead').item.json.name }}!\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.twilio",
+      "typeVersion": 1,
+      "position": [
+        -240,
+        656
+      ],
+      "id": "bcdb257a-f59b-4a98-adab-fc5b8a762e3d",
+      "name": "Send an SMS/MMS/WhatsApp message1",
+      "credentials": {
+        "twilioApi": {
+          "id": "icjex7fNrNb2qPnb",
+          "name": "Twilio account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "📝 LEAD CAPTURE & INITIAL PROCESSING\n\nFLOW: Form Trigger → Data Processing → Scoring → Sheet Logging → WhatsApp Welcome\n\n🔹 Collects: Name, phone, email, property type, budget, location, timeline, requirements\n🔹 Validates: Phone numbers with country code formatting\n🔹 Scores: A/B/C grades based on budget (40%), timeline (30%), financing (20%), completeness (10%)\n🔹 Logs: Complete lead profile to leads_master sheet\n🔹 Welcomes: Sends personalized WhatsApp message to valid phone numbers\n\nTRIGGERS: Auto-assignment workflow for A/B grade leads",
+        "height": 288,
+        "width": 848
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        80,
+        -176
+      ],
+      "typeVersion": 1,
+      "id": "fb2c1054-073c-4de5-9dd7-e0ec43e2cd42",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "content": "🎯 AUTOMATIC AGENT ASSIGNMENT SYSTEM\n\nFLOW: Sheets Trigger → A/B Grade Filter → Agent Matching → Assignment Logging → Agent Notification\n\n🔹 Triggers: When leads_master sheet is updated with A/B grade leads\n🔹 Matches: Based on location coverage (downtown/central/riverside → Sarah, suburbs/northside/eastside → Mike)\n🔹 Updates: agent_assignments sheet with lead-agent pairing\n🔹 Notifies: Assigned agent via WhatsApp with complete lead details\n\nAGENT NOTIFICATION INCLUDES:\n- Lead grade, name, phone, property type, budget, location\n- Timeline and special requirements\n- Call-to-action for property suggestions\n\nENSURES: Qualified leads get immediate agent attention",
+        "height": 336,
+        "width": 784
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        384,
+        992
+      ],
+      "typeVersion": 1,
+      "id": "39530658-eb9b-4d36-8890-e0189683c15f",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "content": "📱 WHATSAPP AI COORDINATION HUB\n\nFLOW: Twilio Trigger → Message Processing → Agent/Lead Detection → AI Agent → Conversation Logging\n\n🔹 Receives: All incoming WhatsApp messages\n🔹 Identifies: Agent vs Lead based on phone number lookup in agents sheet  \n🔹 Processes: Via AI agent with 4 tools (Lead Lookup, Score Updater, Agent Assignment Lookup, WhatsApp Messenger)\n🔹 Coordinates: Lead qualification, property suggestions, viewing scheduling\n🔹 Logs: All conversations with AI responses in conversations sheet\n\nAI AGENT CAPABILITIES:\n- Lead qualification and data completion\n- Agent lead management and property forwarding\n- Viewing request coordination and confirmation\n- Database updates and conversation tracking",
+        "height": 400,
+        "width": 1056,
+        "color": 7
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        608,
+        384
+      ],
+      "typeVersion": 1,
+      "id": "779469e9-82a8-4216-b815-c00202559c13",
+      "name": "Sticky Note2"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_GOOGLE_SHEETS_ID_HERE",
+          "mode": "list",
+          "cachedResultName": "new",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/YOUR_GOOGLE_SHEETS_ID_HERE/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1996463836,
+          "mode": "list",
+          "cachedResultName": "agent_assignments",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/YOUR_GOOGLE_SHEETS_ID_HERE/edit#gid=1996463836"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "phone",
+              "lookupValue": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('values0_Value', ``, 'string') }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheetsTool",
+      "typeVersion": 4.6,
+      "position": [
+        240,
+        432
+      ],
+      "id": "405cc975-68a7-4dbe-920d-d7cdda33f9f8",
+      "name": "Get agent_assignement_data",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "1OQ5GyBNdgGcDD92",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_GOOGLE_SHEETS_ID_HERE",
+          "mode": "list",
+          "cachedResultName": "new",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/YOUR_GOOGLE_SHEETS_ID_HERE/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1996463836,
+          "mode": "list",
+          "cachedResultName": "agent_assignments",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/YOUR_GOOGLE_SHEETS_ID_HERE/edit#gid=1996463836"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "lead_id": "={{ $json.lead_id }}",
+            "phone": "={{ $json.phone }}",
+            "agent_phone": "={{ $json.agent_phone }}",
+            "assigned_agent": "={{ $json.agent_name }}",
+            "assignment_date": "={{$now}}",
+            "status": "={{ $json.status }}"
+          },
+          "matchingColumns": [
+            "phone"
+          ],
+          "schema": [
+            {
+              "id": "lead_id",
+              "displayName": "lead_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "phone",
+              "displayName": "phone",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "assigned_agent",
+              "displayName": "assigned_agent",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "agent_phone",
+              "displayName": "agent_phone",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "assignment_date",
+              "displayName": "assignment_date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "notes",
+              "displayName": "notes",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.6,
+      "position": [
+        -464,
+        848
+      ],
+      "id": "fe98b498-98f4-4bf7-bc16-ddced7df649b",
+      "name": "Append or update row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "1OQ5GyBNdgGcDD92",
+          "name": "Google Sheets account"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Real Estate Lead Form1": {
+      "main": [
+        [
+          {
+            "node": "Process Lead Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Process Lead Data": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Phone Validation Check": {
+      "main": [
+        [
+          {
+            "node": "Send an SMS/MMS/WhatsApp message",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [],
+        []
+      ]
+    },
+    "Twilio Trigger": {
+      "main": [
+        [
+          {
+            "node": "Process Incoming Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Process Incoming Message": {
+      "main": [
+        [
+          {
+            "node": "Check if Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Real Estate AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Manual Conversation Logger",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Real Estate AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Lead Lookup Tool": {
+      "ai_tool": [
+        [
+          {
+            "node": "Real Estate AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Lead Score Updater Tool": {
+      "ai_tool": [
+        [
+          {
+            "node": "Real Estate AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "WhatsApp Messenger Tool": {
+      "ai_tool": [
+        [
+          {
+            "node": "Real Estate AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "Real Estate AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "Log Lead to Google Sheets",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Phone Validation Check",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check if Agent": {
+      "main": [
+        [
+          {
+            "node": "Identify Sender Type",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Identify Sender Type": {
+      "main": [
+        [
+          {
+            "node": "Real Estate AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check if A/B Grade Lead": {
+      "main": [
+        [
+          {
+            "node": "Get All Agents",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get All Agents": {
+      "main": [
+        [
+          {
+            "node": "Match Agent to Lead",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Match Agent to Lead": {
+      "main": [
+        [
+          {
+            "node": "Update Lead Assignment",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Append or update row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Lead Assignment": {
+      "main": [
+        [
+          {
+            "node": "Send an SMS/MMS/WhatsApp message1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Sheets Trigger1": {
+      "main": [
+        [
+          {
+            "node": "Check if A/B Grade Lead",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get agent_assignement_data": {
+      "ai_tool": [
+        [
+          {
+            "node": "Real Estate AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append or update row in sheet": {
+      "main": [
+        []
+      ]
+    }
+  },
+  "pinData": {},
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "YOUR_N8N_INSTANCE_ID_HERE"
+  }
+}
